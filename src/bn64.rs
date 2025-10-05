@@ -228,7 +228,7 @@ fn mold(mut a: Bn64, mut b: Bn64) -> Bn64 {
     } else {
         let mut nx: Bn64 = b.left_push(diff as usize);
         let mut nx_1: Bn64 = b.left_push(diff as usize - 1);
-        if a.cmp(&mut nx) < 0 {
+        if a.cmp(&mut nx) >= 0 {
             return a.sub(&mut nx);
         } else {
             return a.sub(&mut nx_1);

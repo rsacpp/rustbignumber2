@@ -1,0 +1,266 @@
+/*
+ */
+use log::{error, info};
+
+const _BITS0X20: u64 = 0xffffffff;
+pub struct Bn64 {
+    _len: usize,
+    _dat: Vec<u64>,
+}
+
+impl Bn64 {
+    pub fn new(len: usize) -> Bn64 {
+        Bn64 {
+            _len: len,
+            _dat: vec![0; len],
+        }
+    }
+
+    pub fn from(raw_text: String) -> Bn64 {
+        let raw_len: usize = raw_text.len();
+        let mut length: usize = raw_len / 0x10;
+        if (raw_len % 0x10) > 0 {
+            length += 1;
+        }
+        let mut dat: Vec<u64> = vec![0; length];
+        for index in 0..raw_len {
+            let ch: char = raw_text.chars().nth(index).unwrap();
+            if ch.is_ascii_hexdigit() {
+                let val: u64 = ch.to_digit(0x10).unwrap() as u64;
+                let (result, _) = val.overflowing_shl(index as u32 * 4);
+                dat[index / 0x10] += result;
+            }
+        }
+        Bn64 {
+            _len: length,
+            _dat: dat,
+        }
+    }
+
+    pub fn to_hex(&mut self) {
+        let mut text: String = String::new();
+        for index in 0..self._len {
+            let val: u64 = self._dat[index];
+            let f: u32 = 0xf;
+            for offset in 0..0x10 {
+                let (result, _) = val.overflowing_shr(offset as u32 * 4);
+                let d = result as u32 & f;
+                let ch: char = char::from_digit(d, 0x10).unwrap();
+                text.push(ch);
+            }
+        }
+        info!("{text}");
+    }
+
+    pub fn shrink(&mut self) {
+        let mut index = self._len - 1;
+        while index > 0 {
+            if self._dat[index] == 0 {
+                index -= 1;
+            } else {
+                break;
+            }
+        }
+        self._len = index + 1;
+    }
+
+    pub fn bits(&mut self) -> usize {
+        self.shrink();
+        let mut length = self._len * 0x40;
+        let mut gauge: u64 = 0x8000000000000000;
+        let mut v: u64 = self._dat[self._len - 1];
+        while (v & gauge) == 0 && v > 0 {
+            let (result, _) = gauge.overflowing_shr(1);
+            gauge = result;
+            length -= 1;
+        }
+        length
+    }
+
+    pub fn add_at(&mut self, index: usize, input: u64) {
+        let value = self._dat[index];
+        let (result, overflow) = value.overflowing_add(input);
+        self._dat[index] = result;
+        if overflow {
+            self.add_at(index + 1, 1);
+        }
+    }
+
+    pub fn sub_at(&mut self, index: usize, input: u64) {
+        let value = self._dat[index];
+        let (result, overflow) = value.overflowing_sub(input);
+        self._dat[index] = result;
+        if overflow {
+            self.sub_at(index + 1, 1);
+        }
+    }
+
+    /*
+    self > bn => 1;
+    self < bn => -1;
+    self == bn => 0;
+    */
+    pub fn cmp(&mut self, bn: &mut Bn64) -> i8 {
+        self.shrink();
+        bn.shrink();
+        if self._len > bn._len {
+            return 1;
+        }
+        if self._len < bn._len {
+            return -1;
+        }
+        let mut index = self._len - 1;
+        while index > 0 && self._dat[index] == bn._dat[index] {
+            index -= 1;
+        }
+        if self._dat[index] > bn._dat[index] {
+            return 1;
+        }
+        if self._dat[index] < bn._dat[index] {
+            return -1;
+        }
+        return 0;
+    }
+    /*self << bits*/
+    pub fn left_push(&mut self, bits: usize) -> Bn64 {
+        let external_offset: usize = self.bits() / 0x40;
+        let internal_offset: usize = self.bits() % 0x40;
+        let length = self._len + external_offset;
+        if internal_offset == 0 {
+            // push without breaking the elements
+            let mut bn64: Bn64 = Bn64::new(length);
+            for index in 0..self._len {
+                bn64.add_at(index + external_offset, self._dat[index]);
+            }
+            return bn64;
+        } else {
+            // push with breaking the elements
+            let mut bn64: Bn64 = Bn64::new(length + 1);
+            for index in 0..self._len {
+                let (updated, overflow) = self._dat[index].overflowing_shl(internal_offset as u32);
+                bn64.add_at(index + external_offset, updated);
+                if overflow {
+                    let remain: usize = 0x40 - internal_offset;
+                    let (remain, _) = self._dat[index].overflowing_shr(remain as u32);
+                    bn64.add_at(index + external_offset + 1, remain);
+                }
+            }
+            return bn64;
+        }
+    }
+    /*self + bn;*/
+    pub fn add(&mut self, bn: &mut Bn64) -> Bn64 {
+        self.shrink();
+        bn.shrink();
+        let mut length = self._len;
+        if length < bn._len {
+            length = bn._len;
+        }
+        length += 1;
+        let mut return_val: Bn64 = Bn64::new(length);
+        for index in 0..self._len {
+            return_val.add_at(index, self._dat[index]);
+        }
+        for index in 0..bn._len {
+            return_val.add_at(index, bn._dat[index]);
+        }
+        return return_val;
+    }
+    /*self - bn;*/
+    pub fn sub(&mut self, bn: &mut Bn64) -> Bn64 {
+        self.shrink();
+        bn.shrink();
+        let mut return_val: Bn64 = Bn64::new(self._len);
+        for index in 0..self._len {
+            return_val.add_at(index, self._dat[index]);
+        }
+        for index in 0..bn._len {
+            return_val.sub_at(index, bn._dat[index]);
+        }
+        return return_val;
+    }
+    /*self * bn;*/
+    pub fn mul(&mut self, bn: &mut Bn64) -> Bn64 {
+        self.shrink();
+        bn.shrink();
+        let length = self._len + bn._len;
+        let mut return_val: Bn64 = Bn64::new(length);
+        for index_a in 0..self._len {
+            let right_a = self._dat[index_a] & _BITS0X20;
+            let left_a = self._dat[index_a] >> 0x20;
+            for index_b in 0..bn._len {
+                let right_b = bn._dat[index_b] & _BITS0X20;
+                let left_b = bn._dat[index_b] >> 0x20;
+                return_val.add_at(index_a + index_b, right_a * right_b);
+                return_val.add_at(index_a + index_b + 1, left_a * left_b);
+                let (tmp1, _) = (left_a * right_b).overflowing_shl(0x20);
+                return_val.add_at(index_a + index_b, tmp1);
+                return_val.add_at(index_a + index_b + 1, (left_a * right_b) >> 0x20);
+                let (tmp2, _) = (left_b * right_a).overflowing_shl(0x20);
+                return_val.add_at(index_a + index_b, tmp2);
+                return_val.add_at(index_a + index_b + 1, (left_b * right_a) >> 0x20);
+            }
+        }
+        return_val.shrink();
+        return return_val;
+    }
+
+    pub fn clone(&mut self) -> Bn64 {
+        let mut bn: Bn64 = Bn64::new(self._len);
+        for index in 0..self._len {
+            bn.add_at(index, self._dat[index]);
+        }
+        return bn;
+    }
+}
+/*self % bn;*/
+fn mold(mut a: Bn64, mut b: Bn64) -> Bn64 {
+    a.shrink();
+    b.shrink();
+    if a.cmp(&mut b) < 0 {
+        return a;
+    }
+    let mut diff: i32 = a.bits() as i32;
+    diff -= b.bits() as i32;
+    if diff < 0 {
+        error!("logic error, diff: {}", diff);
+        return Bn64::new(1);
+    } else {
+        let mut nx: Bn64 = b.left_push(diff as usize);
+        let mut nx_1: Bn64 = b.left_push(diff as usize - 1);
+        if a.cmp(&mut nx) < 0 {
+            return a.sub(&mut nx);
+        } else {
+            return a.sub(&mut nx_1);
+        }
+    }
+}
+
+fn npmod(mut a: Bn64, mut b: Bn64, mut c: Bn64) -> Bn64 {
+    a.shrink();
+    b.shrink();
+    c.shrink();
+    let bits = b.bits();
+    let mut array: Vec<Bn64> = Vec::with_capacity(bits);
+    array.push(a);
+    for index in 0..bits {
+        let mut current: Bn64 = array[index].clone();
+        let mut clone: Bn64 = current.clone();
+        let v: Bn64 = current.mul(&mut clone);
+        let v: Bn64 = mold(v, c.clone());
+        array.push(v);
+    }
+    let mut result: Bn64 = Bn64::new(1);
+    result.add_at(0, 1);
+    for index in 0..bits {
+        let external_offset = index / 0x40;
+        let internal_offset = index % 0x40;
+        let v1: u64 = 0x1;
+        let v1 = v1 << internal_offset;
+        if (b._dat[external_offset] & v1) > 0 {
+            result = result.mul(&mut array[index].clone());
+            result = mold(result, c.clone());
+        }
+    }
+    return result;
+}

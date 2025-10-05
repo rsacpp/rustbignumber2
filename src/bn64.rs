@@ -242,7 +242,8 @@ fn npmod(mut a: Bn64, mut b: Bn64, mut c: Bn64) -> Bn64 {
     c.shrink();
     let bits = b.bits();
     let mut array: Vec<Bn64> = Vec::with_capacity(bits);
-    array.push(a);
+    let m = mold(a, c.clone());
+    array.push(m);
     for index in 0..bits {
         let mut current: Bn64 = array[index].clone();
         let mut clone: Bn64 = current.clone();

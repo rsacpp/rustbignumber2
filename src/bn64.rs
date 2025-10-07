@@ -74,7 +74,7 @@ impl Bn64 {
             gauge = result;
             length -= 1;
         }
-        length
+        return length;
     }
 
     pub fn add_at(&mut self, index: usize, input: u64) {
@@ -160,52 +160,54 @@ impl Bn64 {
             length = bn._len;
         }
         length += 1;
-        let mut return_val: Bn64 = Bn64::new(length);
+        let mut result: Bn64 = Bn64::new(length);
         for index in 0..self._len {
-            return_val.add_at(index, self._dat[index]);
+            result.add_at(index, self._dat[index]);
         }
         for index in 0..bn._len {
-            return_val.add_at(index, bn._dat[index]);
+            result.add_at(index, bn._dat[index]);
         }
-        return return_val;
+        result.shrink();
+        return result;
     }
     /*self - bn;*/
     pub fn sub(&mut self, bn: &mut Bn64) -> Bn64 {
         self.shrink();
         bn.shrink();
-        let mut return_val: Bn64 = Bn64::new(self._len);
+        let mut result: Bn64 = Bn64::new(self._len);
         for index in 0..self._len {
-            return_val.add_at(index, self._dat[index]);
+            result.add_at(index, self._dat[index]);
         }
         for index in 0..bn._len {
-            return_val.sub_at(index, bn._dat[index]);
+            result.sub_at(index, bn._dat[index]);
         }
-        return return_val;
+        result.shrink();
+        return result;
     }
     /*self * bn;*/
     pub fn mul(&mut self, bn: &mut Bn64) -> Bn64 {
         self.shrink();
         bn.shrink();
         let length = self._len + bn._len;
-        let mut return_val: Bn64 = Bn64::new(length);
+        let mut result: Bn64 = Bn64::new(length);
         for index_a in 0..self._len {
             let right_a = self._dat[index_a] & _BITS0X20;
             let left_a = self._dat[index_a] >> 0x20;
             for index_b in 0..bn._len {
                 let right_b = bn._dat[index_b] & _BITS0X20;
                 let left_b = bn._dat[index_b] >> 0x20;
-                return_val.add_at(index_a + index_b, right_a * right_b);
-                return_val.add_at(index_a + index_b + 1, left_a * left_b);
+                result.add_at(index_a + index_b, right_a * right_b);
+                result.add_at(index_a + index_b + 1, left_a * left_b);
                 let (tmp1, _) = (left_a * right_b).overflowing_shl(0x20);
-                return_val.add_at(index_a + index_b, tmp1);
-                return_val.add_at(index_a + index_b + 1, (left_a * right_b) >> 0x20);
+                result.add_at(index_a + index_b, tmp1);
+                result.add_at(index_a + index_b + 1, (left_a * right_b) >> 0x20);
                 let (tmp2, _) = (left_b * right_a).overflowing_shl(0x20);
-                return_val.add_at(index_a + index_b, tmp2);
-                return_val.add_at(index_a + index_b + 1, (left_b * right_a) >> 0x20);
+                result.add_at(index_a + index_b, tmp2);
+                result.add_at(index_a + index_b + 1, (left_b * right_a) >> 0x20);
             }
         }
-        return_val.shrink();
-        return return_val;
+        result.shrink();
+        return result;
     }
 
     pub fn clone(&mut self) -> Bn64 {
@@ -242,7 +244,7 @@ fn mold(mut a: Bn64, mut b: Bn64) -> Bn64 {
         } else {
             /* e.g for (5: 3), 5 < 3 * 2, */
             let mut nx_1: Bn64 = b.left_push(diff as usize - 1);
-            a.sub(&mut nx_1)
+            return a.sub(&mut nx_1);
         }
     }
 }

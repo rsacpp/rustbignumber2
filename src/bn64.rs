@@ -27,7 +27,7 @@ impl Bn64 {
             let ch: char = raw_text.chars().nth(index).unwrap();
             if ch.is_ascii_hexdigit() {
                 let val: u64 = ch.to_digit(0x10).unwrap() as u64;
-                let (result, _) = val.overflowing_shl(index as u32 * 4);
+                let (result, _) = val.overflowing_shl((index % 0x10) as u32 * 4);
                 dat[index / 0x10] += result;
             }
         }
@@ -270,7 +270,7 @@ fn npmod(mut a: Bn64, mut b: Bn64, mut c: Bn64) -> Bn64 {
     for index in 0..bits {
         let external_offset = index / 0x40;
         let internal_offset = index % 0x40;
-        let v1:u64 = 0x1 << internal_offset;
+        let v1: u64 = 0x1 << internal_offset;
         if (b._dat[external_offset] & v1) > 0 {
             result = result.mul(&mut array[index]);
             result = mold(result, c.clone());

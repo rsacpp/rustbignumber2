@@ -123,6 +123,9 @@ impl Bn64 {
     }
     /*self << bits*/
     pub fn left_push(&mut self, bits: usize) -> Bn64 {
+        if bits == 0 {
+            return self.clone();
+        }
         let external_offset: usize = self.bits() / 0x40;
         let internal_offset: usize = self.bits() % 0x40;
         let length = self._len + external_offset;
@@ -141,8 +144,8 @@ impl Bn64 {
                 bn64.add_at(index + external_offset, updated);
                 if overflow {
                     let remain: usize = 0x40 - internal_offset;
-                    let (remain, _) = self._dat[index].overflowing_shr(remain as u32);
-                    bn64.add_at(index + external_offset + 1, remain);
+                    let (r, _) = self._dat[index].overflowing_shr(remain as u32);
+                    bn64.add_at(index + external_offset + 1, r);
                 }
             }
             return bn64;
@@ -213,7 +216,7 @@ impl Bn64 {
         return bn;
     }
 }
-/*self % bn;*/
+/* a % b; */
 fn mold(mut a: Bn64, mut b: Bn64) -> Bn64 {
     a.shrink();
     b.shrink();
@@ -222,20 +225,29 @@ fn mold(mut a: Bn64, mut b: Bn64) -> Bn64 {
     }
     let mut diff: i32 = a.bits() as i32;
     diff -= b.bits() as i32;
+    /*case diff < 0*/
     if diff < 0 {
         error!("logic error, diff: {}", diff);
-        return Bn64::new(1);
+        return a;
     } else {
+        /* case: diff == 0, e.g 3 - 2 */
+        if diff == 0 {
+            return a.sub(&mut b);
+        }
+        /* case: diff > 0 */
         let mut nx: Bn64 = b.left_push(diff as usize);
         if a.cmp(&mut nx) >= 0 {
+            /*e.g for (7: 3), 7 > 3 * 2*/
             return a.sub(&mut nx);
         } else {
+            /* e.g for (5: 3), 5 < 3 * 2, */
             let mut nx_1: Bn64 = b.left_push(diff as usize - 1);
-            return a.sub(&mut nx_1);
+            a.sub(&mut nx_1)
         }
     }
 }
 
+/* a^b % c*/
 fn npmod(mut a: Bn64, mut b: Bn64, mut c: Bn64) -> Bn64 {
     a.shrink();
     b.shrink();
@@ -256,10 +268,9 @@ fn npmod(mut a: Bn64, mut b: Bn64, mut c: Bn64) -> Bn64 {
     for index in 0..bits {
         let external_offset = index / 0x40;
         let internal_offset = index % 0x40;
-        let v1: u64 = 0x1;
-        let v1 = v1 << internal_offset;
+        let v1 = 0x1 << internal_offset;
         if (b._dat[external_offset] & v1) > 0 {
-            result = result.mul(&mut array[index].clone());
+            result = result.mul(&mut array[index]);
             result = mold(result, c.clone());
         }
     }

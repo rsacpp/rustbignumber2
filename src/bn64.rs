@@ -270,7 +270,7 @@ fn npmod(mut a: Bn64, mut b: Bn64, mut c: Bn64) -> Bn64 {
     for index in 0..bits {
         let external_offset = index / 0x40;
         let internal_offset = index % 0x40;
-        let v1 = 0x1 << internal_offset;
+        let v1:u64 = 0x1 << internal_offset;
         if (b._dat[external_offset] & v1) > 0 {
             result = result.mul(&mut array[index]);
             result = mold(result, c.clone());

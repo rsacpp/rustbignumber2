@@ -126,29 +126,29 @@ impl Bn64 {
         if bits == 0 {
             return self.clone();
         }
-        let external_offset: usize = self.bits() / 0x40;
-        let internal_offset: usize = self.bits() % 0x40;
+        let external_offset: usize = bits / 0x40;
+        let internal_offset: usize = bits % 0x40;
         let length = self._len + external_offset;
         if internal_offset == 0 {
-            // push without breaking the elements
-            let mut bn64: Bn64 = Bn64::new(length);
+            /* push without splitting the elements */
+            let mut bn: Bn64 = Bn64::new(length);
             for index in 0..self._len {
-                bn64.add_at(index + external_offset, self._dat[index]);
+                bn.add_at(index + external_offset, self._dat[index]);
             }
-            return bn64;
+            return bn;
         } else {
-            // push with breaking the elements
-            let mut bn64: Bn64 = Bn64::new(length + 1);
+            /* push with splitting the elements */
+            let mut bn: Bn64 = Bn64::new(length + 1);
             for index in 0..self._len {
                 let (updated, overflow) = self._dat[index].overflowing_shl(internal_offset as u32);
-                bn64.add_at(index + external_offset, updated);
+                bn.add_at(index + external_offset, updated);
                 if overflow {
                     let remain: usize = 0x40 - internal_offset;
                     let (r, _) = self._dat[index].overflowing_shr(remain as u32);
-                    bn64.add_at(index + external_offset + 1, r);
+                    bn.add_at(index + external_offset + 1, r);
                 }
             }
-            return bn64;
+            return bn;
         }
     }
     /*self + bn;*/

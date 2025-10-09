@@ -37,7 +37,7 @@ impl Bn64 {
         }
     }
 
-    pub fn to_hex(self) {
+    pub fn to_hex(& self) {
         let mut text: String = String::new();
         for index in 0..self._len {
             let val: u64 = self._dat[index];

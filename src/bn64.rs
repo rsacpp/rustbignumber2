@@ -1,6 +1,7 @@
 /*
  */
 use log::{error, info};
+use std::boxed::Box;
 
 const _BITS0X20: u64 = 0xffffffff;
 pub struct Bn64 {
@@ -37,7 +38,7 @@ impl Bn64 {
         }
     }
 
-    pub fn to_hex(& self) {
+    pub fn to_hex(&self) {
         let mut text: String = String::new();
         for index in 0..self._len {
             let val: u64 = self._dat[index];
@@ -217,53 +218,46 @@ impl Bn64 {
         }
         return bn;
     }
-}
-/* a % b; */
-fn mold(mut a: Bn64, mut b: Bn64) -> Bn64 {
-    a.shrink();
-    b.shrink();
-    if a.cmp(&mut b) < 0 {
-        return a;
-    }
-    let mut diff: i32 = a.bits() as i32;
-    diff -= b.bits() as i32;
-    /*case diff < 0*/
-    if diff < 0 {
-        error!("logic error, diff: {}", diff);
-        return a;
-    } else {
-        /* case: diff == 0, e.g 3 - 2 */
-        if diff == 0 {
-            return a.sub(&mut b);
-        }
-        /* case: diff > 0 */
-        let mut nx: Bn64 = b.left_push(diff as usize);
-        if a.cmp(&mut nx) >= 0 {
-            /*e.g for (7: 3), 7 > 3 * 2*/
-            return a.sub(&mut nx);
-        } else {
-            /* e.g for (5: 3), 5 < 3 * 2, */
-            let mut nx_1: Bn64 = b.left_push(diff as usize - 1);
-            return a.sub(&mut nx_1);
-        }
-    }
-}
 
+    /*
+    self % m;
+     */
+    pub fn mode(&mut self, m: &mut Bn64) -> Bn64 {
+        self.shrink();
+        m.shrink();
+        if self.cmp(m) < 0 {
+            return self.clone();
+        }
+        let mut diff: i32 = self.bits() as i32;
+        diff = diff - m.bits() as i32;
+        if diff == 0 {
+            return self.sub(m);
+        }
+        if self.cmp(m) >= 0 {
+            let mut nx = Box::new(m.left_push(diff as usize));
+            self.sub(&mut nx).mode(m)
+        } else {
+            let mut nx_1 = Box::new(m.left_push(diff as usize));
+            self.sub(&mut nx_1).mode(m)
+        }
+    }
+}
 /* a^b % c*/
+
 fn npmod(mut a: Bn64, mut b: Bn64, mut c: Bn64) -> Bn64 {
     a.shrink();
     b.shrink();
     c.shrink();
     let bits = b.bits();
     let mut array: Vec<Bn64> = Vec::with_capacity(bits);
-    let m = mold(a, c.clone());
+    let m = a.mode(&mut c);
     array.push(m);
     for index in 0..bits {
         let mut current: Bn64 = array[index].clone();
-        let mut clone: Bn64 = current.clone();
-        let v: Bn64 = current.mul(&mut clone);
-        let v: Bn64 = mold(v, c.clone());
-        array.push(v);
+        let mut current_copy: Bn64 = current.clone();
+        let mut v: Bn64 = current.mul(&mut current_copy);
+        let re = v.mode(&mut c);
+        array.push(re);
     }
     let mut result: Bn64 = Bn64::new(1);
     result.add_at(0, 1);
@@ -273,7 +267,7 @@ fn npmod(mut a: Bn64, mut b: Bn64, mut c: Bn64) -> Bn64 {
         let v1: u64 = 0x1 << internal_offset;
         if (b._dat[external_offset] & v1) > 0 {
             result = result.mul(&mut array[index]);
-            result = mold(result, c.clone());
+            result = result.mode(&mut c);
         }
     }
     return result;

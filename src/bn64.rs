@@ -237,7 +237,7 @@ impl Bn64 {
             let mut nx = Box::new(m.left_push(diff as usize));
             self.sub(&mut nx).mode(m)
         } else {
-            let mut nx_1 = Box::new(m.left_push(diff as usize));
+            let mut nx_1 = Box::new(m.left_push(diff as usize - 1));
             self.sub(&mut nx_1).mode(m)
         }
     }

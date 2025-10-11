@@ -259,16 +259,18 @@ fn npmod(mut a: Bn64, mut b: Bn64, mut c: Bn64) -> Bn64 {
         let re = v.mode(&mut c);
         array.push(re);
     }
-    let mut result: Bn64 = Bn64::new(1);
+    let mut result =  Bn64::new(1);
     result.add_at(0, 1);
+    let mut result = Box::new(result);
     for index in 0..bits {
         let external_offset = index / 0x40;
         let internal_offset = index % 0x40;
         let v1: u64 = 0x1 << internal_offset;
         if (b._dat[external_offset] & v1) > 0 {
-            result = result.mul(&mut array[index]);
-            result = result.mode(&mut c);
+            let mut re = result.mul(&mut array[index]);
+            re = re.mode(&mut c);
+            result = Box::new(re);
         }
     }
-    return result;
+    return *result;
 }

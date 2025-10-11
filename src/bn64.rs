@@ -235,10 +235,10 @@ impl Bn64 {
         }
         if self.cmp(m) >= 0 {
             let mut nx = Box::new(m.left_push(diff as usize));
-            self.sub(&mut nx).mode(m)
+            self.sub(&mut *nx).mode(m)
         } else {
             let mut nx_1 = Box::new(m.left_push(diff as usize - 1));
-            self.sub(&mut nx_1).mode(m)
+            self.sub(&mut *nx_1).mode(m)
         }
     }
 }

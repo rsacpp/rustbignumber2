@@ -141,8 +141,7 @@ impl Bn64 {
             /* push with splitting the elements */
             let mut bn: Bn64 = Bn64::new(length + 1);
             for index in 0..self._len {
-                let (left_shifted, _) =
-                    self._dat[index].overflowing_shl(internal_offset as u32);
+                let (left_shifted, _) = self._dat[index].overflowing_shl(internal_offset as u32);
                 bn.add_at(index + external_offset, left_shifted);
                 let (right_shifted, _) =
                     self._dat[index].overflowing_shr(0x40 - internal_offset as u32);
@@ -279,7 +278,7 @@ pub fn mersenne(n: usize) -> Bn64 {
     let len = n / 0x40 + 1;
     let pos = n % 0x40;
     let mut result = Bn64::new(len);
-    result.add_at(len - 1, 0x1<< pos);
+    result.add_at(len - 1, 0x1 << pos);
     result.sub_at(0, 1);
     return result;
 }

@@ -244,19 +244,19 @@ pub fn mode(a: &mut Bn64, m: &mut Bn64) -> Bn64 {
 
 /* a^b % c*/
 
-fn npmod(mut a: Bn64, mut b: Bn64, mut c: Bn64) -> Bn64 {
+fn npmod(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     a.shrink();
     b.shrink();
     c.shrink();
     let bits = b.bits();
     let mut array: Vec<Bn64> = Vec::with_capacity(bits);
-    let m = mode(&mut a, &mut c);
+    let m = mode(a, c);
     array.push(m);
     for index in 0..bits {
         let mut current: Bn64 = array[index].clone();
         let mut current_copy: Bn64 = current.clone();
         let mut v: Bn64 = current.mul(&mut current_copy);
-        let re = mode(&mut v, &mut c);
+        let re = mode(&mut v, c);
         array.push(re);
     }
     let mut result = Bn64::new(1);
@@ -268,7 +268,7 @@ fn npmod(mut a: Bn64, mut b: Bn64, mut c: Bn64) -> Bn64 {
         let v1: u64 = 0x1 << internal_offset;
         if (b._dat[external_offset] & v1) > 0 {
             let mut re = result.mul(&mut array[index]);
-            re = mode(&mut re, &mut c);
+            re = mode(&mut re, c);
             result = Box::new(re);
         }
     }

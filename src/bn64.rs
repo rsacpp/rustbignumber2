@@ -9,6 +9,11 @@ pub struct Bn64 {
     _dat: Vec<u64>,
 }
 
+impl Drop for Bn64 {
+    fn drop(&mut self) {
+        // info!("Dropping Bn64 {:p}", &self);
+    }
+}
 impl Bn64 {
     pub fn new(len: usize) -> Bn64 {
         Bn64 {
@@ -150,25 +155,6 @@ impl Bn64 {
             bn.shrink();
             return bn;
         }
-    }
-    /*self + bn;*/
-    pub fn add(&mut self, bn: &mut Bn64) -> Bn64 {
-        self.shrink();
-        bn.shrink();
-        let mut length = self._len;
-        if length < bn._len {
-            length = bn._len;
-        }
-        length += 1;
-        let mut result: Bn64 = Bn64::new(length);
-        for index in 0..self._len {
-            result.add_at(index, self._dat[index]);
-        }
-        for index in 0..bn._len {
-            result.add_at(index, bn._dat[index]);
-        }
-        result.shrink();
-        return result;
     }
     /*self - bn;*/
     pub fn sub(&mut self, bn: &mut Bn64) -> Bn64 {

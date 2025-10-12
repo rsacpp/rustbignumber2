@@ -141,10 +141,12 @@ impl Bn64 {
             /* push with splitting the elements */
             let mut bn: Bn64 = Bn64::new(length + 1);
             for index in 0..self._len {
-                let (updated, overflow) = self._dat[index].overflowing_shl(internal_offset as u32);
-                bn.add_at(index + external_offset, updated);
-                let (left, _) = self._dat[index].overflowing_shr(0x40 - internal_offset as u32);
-                bn.add_at(index + external_offset + 1, left);
+                let (left_shifted, overflow) =
+                    self._dat[index].overflowing_shl(internal_offset as u32);
+                bn.add_at(index + external_offset, left_shifted);
+                let (right_shifted, _) =
+                    self._dat[index].overflowing_shr(0x40 - internal_offset as u32);
+                bn.add_at(index + external_offset + 1, right_shifted);
             }
             bn.shrink();
             return bn;
@@ -242,7 +244,7 @@ pub fn mode(a: &mut Bn64, m: &mut Bn64) -> Bn64 {
 
 /* a^b % c*/
 
-fn npmod(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
+pub fn npmod(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     a.shrink();
     b.shrink();
     c.shrink();

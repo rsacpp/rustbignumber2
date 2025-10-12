@@ -221,11 +221,11 @@ pub fn mode(a: &mut Bn64, m: &mut Bn64) -> Bn64 {
         if diff == 0 {
             return box_a.sub(m);
         }
-        let mut nx = Box::new(m.left_push(diff as usize));
+        let mut nx = m.left_push(diff as usize);
         if box_a.cmp(&mut nx) >= 0 {
             box_a = Box::new(box_a.sub(&mut nx));
         } else {
-            let mut nx_1 = Box::new(m.left_push(diff as usize - 1));
+            let mut nx_1 = m.left_push(diff as usize - 1);
             box_a = Box::new(box_a.sub(&mut nx_1));
         }
     }

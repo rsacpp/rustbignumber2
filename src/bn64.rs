@@ -74,7 +74,7 @@ impl Bn64 {
         self.shrink();
         let mut length = self._len * 0x40;
         let mut gauge: u64 = 0x8000000000000000;
-        let mut v: u64 = self._dat[self._len - 1];
+        let v: u64 = self._dat[self._len - 1];
         while (v & gauge) == 0 && v > 0 {
             let (result, _) = gauge.overflowing_shr(1);
             gauge = result;

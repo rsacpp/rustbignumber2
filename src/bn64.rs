@@ -141,7 +141,7 @@ impl Bn64 {
             /* push with splitting the elements */
             let mut bn: Bn64 = Bn64::new(length + 1);
             for index in 0..self._len {
-                let (left_shifted, overflow) =
+                let (left_shifted, _) =
                     self._dat[index].overflowing_shl(internal_offset as u32);
                 bn.add_at(index + external_offset, left_shifted);
                 let (right_shifted, _) =

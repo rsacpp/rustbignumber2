@@ -274,3 +274,12 @@ pub fn npmod(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     }
     return *result;
 }
+
+pub fn mersenne(n: usize) -> Bn64 {
+    let len = n / 0x40 + 1;
+    let pos = n % 0x40;
+    let mut result = Bn64::new(len);
+    result.add_at(len - 1, 0x1<< pos);
+    result.sub_at(0, 1);
+    return result;
+}

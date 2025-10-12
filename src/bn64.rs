@@ -143,12 +143,10 @@ impl Bn64 {
             for index in 0..self._len {
                 let (updated, overflow) = self._dat[index].overflowing_shl(internal_offset as u32);
                 bn.add_at(index + external_offset, updated);
-                if overflow {
-                    let remain: usize = 0x40 - internal_offset;
-                    let (r, _) = self._dat[index].overflowing_shr(remain as u32);
-                    bn.add_at(index + external_offset + 1, r);
-                }
+                let (left, _) = self._dat[index].overflowing_shr(0x40 - internal_offset as u32);
+                bn.add_at(index + external_offset + 1, left);
             }
+            bn.shrink();
             return bn;
         }
     }
@@ -233,8 +231,8 @@ pub fn mode(a: &mut Bn64, m: &mut Bn64) -> Bn64 {
     if diff == 0 {
         return a.sub(m);
     }
-    if a.cmp(m) >= 0 {
-        let mut nx = Box::new(m.left_push(diff as usize));
+    let mut nx = Box::new(m.left_push(diff as usize));
+    if a.cmp(&mut nx) >= 0 {
         mode(&mut a.sub(&mut nx), m)
     } else {
         let mut nx_1 = Box::new(m.left_push(diff as usize - 1));

@@ -209,7 +209,6 @@ self % m;
  */
 pub fn mode(a: &mut Bn64, m: &mut Bn64) -> Bn64 {
     let mut box_a = Box::new(a.clone());
-    m.shrink();
     let bits_of_m = m.bits() as i32;
     loop {
         box_a.shrink();
@@ -234,9 +233,6 @@ pub fn mode(a: &mut Bn64, m: &mut Bn64) -> Bn64 {
 /* a^b % c*/
 
 pub fn npmod(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
-    a.shrink();
-    b.shrink();
-    c.shrink();
     let bits = b.bits();
     let mut array: Vec<Bn64> = Vec::with_capacity(bits);
     let m = mode(a, c);

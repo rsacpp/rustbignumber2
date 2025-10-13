@@ -1,6 +1,6 @@
 /*
  */
-use log::{error, info};
+use log::info;
 use std::boxed::Box;
 
 const _BITS0X20: u64 = 0xffffffff;

@@ -2,11 +2,14 @@
  */
 use log::info;
 use std::boxed::Box;
+use std::sync::mpsc::channel;
+use std::thread;
 
 const _BITS0X20: u64 = 0xffffffff;
 pub struct Bn64 {
     _len: usize,
     _dat: Vec<u64>,
+    _power: usize,
 }
 
 impl Drop for Bn64 {
@@ -19,6 +22,7 @@ impl Bn64 {
         Bn64 {
             _len: len,
             _dat: vec![0; len],
+            _power: 0,
         }
     }
 
@@ -40,6 +44,7 @@ impl Bn64 {
         Bn64 {
             _len: length,
             _dat: dat,
+            _power: 0,
         }
     }
 
@@ -81,6 +86,16 @@ impl Bn64 {
             length -= 1;
         }
         return length;
+    }
+    pub fn bit(&mut self, index: usize) -> bool {
+        let external_offset = index / 0x40;
+        let internal_offset = index % 0x40;
+        let v: u64 = 0x1 << internal_offset;
+        if (self._dat[external_offset] & v) > 0 {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     pub fn add_at(&mut self, index: usize, input: u64) {
@@ -192,6 +207,7 @@ impl Bn64 {
                 result.add_at(index_a + index_b + 1, (left_b * right_a) >> 0x20);
             }
         }
+
         result.shrink();
         return result;
     }
@@ -201,6 +217,7 @@ impl Bn64 {
         for index in 0..self._len {
             bn.add_at(index, self._dat[index]);
         }
+        bn._power = self._power;
         return bn;
     }
 }
@@ -245,16 +262,48 @@ pub fn npmod(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     result.add_at(0, 1);
     let mut result = Box::new(result);
     for index in 0..bits {
-        let external_offset = index / 0x40;
-        let internal_offset = index % 0x40;
-        let v1: u64 = 0x1 << internal_offset;
-        if (b._dat[external_offset] & v1) > 0 {
+        if b.bit(index) {
             let mut re = result.mul(&mut array[index]);
             re = mode(&mut re, c);
             result = Box::new(re);
         }
     }
     return *result;
+}
+
+pub fn npmod2(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
+    let bits = b.bits();
+    let mut tmp = mode(a, &mut c.clone());
+    let (tx, rx) = channel();
+
+    let mut total_power: usize = 0;
+    for index in 0..bits {
+        if b.bit(index) {
+            tmp._power = index;
+            tx.clone().send(tmp.clone()).unwrap();
+            total_power += index;
+        }
+        let mut copy0 = tmp.clone();
+        tmp = tmp.mul(&mut copy0);
+        tmp = mode(&mut tmp, c);
+    }
+
+    loop {
+        let mut v0 = rx.recv().unwrap();
+        if v0._power == total_power {
+            /* the aggregation is done; */
+            return v0;
+        }
+        let mut v1 = rx.recv().unwrap();
+        let mut c_copy = c.clone();
+        let sender = tx.clone();
+        thread::spawn(move || {
+            let mut r0 = v0.mul(&mut v1);
+            r0 = mode(&mut r0, &mut c_copy);
+            r0._power = v0._power + v1._power;
+            sender.send(r0).unwrap();
+        });
+    }
 }
 
 pub fn mersenne(n: usize) -> Bn64 {

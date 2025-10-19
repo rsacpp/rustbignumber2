@@ -110,11 +110,6 @@ impl Bn128 {
         }
     }
 
-    /*
-    self > bn => 1;
-    self < bn => -1;
-    self == bn => 0;
-    */
     pub fn cmp(&mut self, bn: &mut Bn128) -> i8 {
         self.shrink();
         bn.shrink();
@@ -201,7 +196,6 @@ impl Bn128 {
                 result.add_at(index_a + index_b + 1, (left_b * right_a) >> _HALF_SIZE);
             }
         }
-
         result.shrink();
         return result;
     }
@@ -243,7 +237,6 @@ pub fn npmod2(a: &mut Bn128, b: &mut Bn128, c: &mut Bn128) -> Bn128 {
     let bits = b.bits();
     let mut tmp = mode(a, &mut c.clone());
     let (tx, rx) = channel();
-
     let mut total_tags: usize = 0;
     for index in 0..bits {
         if b.bit(index) {
@@ -255,11 +248,9 @@ pub fn npmod2(a: &mut Bn128, b: &mut Bn128, c: &mut Bn128) -> Bn128 {
         tmp = tmp.mul(&mut copy0);
         tmp = mode(&mut tmp, c);
     }
-
     loop {
         let mut v0 = rx.recv().unwrap();
         if v0._tag == total_tags {
-            /* the aggregation is done; */
             return v0;
         }
         let mut v1 = rx.recv().unwrap();
@@ -273,7 +264,6 @@ pub fn npmod2(a: &mut Bn128, b: &mut Bn128, c: &mut Bn128) -> Bn128 {
         });
     }
 }
-
 pub fn mersenne(n: usize) -> Bn128 {
     let len = n / _SIZE + 1;
     let pos = n % _SIZE;

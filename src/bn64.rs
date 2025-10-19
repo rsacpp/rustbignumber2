@@ -9,7 +9,7 @@ const _BITS0X20: u64 = 0xffffffff;
 pub struct Bn64 {
     _len: usize,
     _dat: Vec<u64>,
-    _power: usize,
+    _tag: usize,
 }
 
 impl Drop for Bn64 {
@@ -22,7 +22,7 @@ impl Bn64 {
         Bn64 {
             _len: len,
             _dat: vec![0; len],
-            _power: 0,
+            _tag: 0,
         }
     }
 
@@ -44,7 +44,7 @@ impl Bn64 {
         Bn64 {
             _len: length,
             _dat: dat,
-            _power: 0,
+            _tag: 0,
         }
     }
 
@@ -217,7 +217,7 @@ impl Bn64 {
         for index in 0..self._len {
             bn.add_at(index, self._dat[index]);
         }
-        bn._power = self._power;
+        bn._tag = self._tag;
         return bn;
     }
 }
@@ -276,12 +276,12 @@ pub fn npmod2(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     let mut tmp = mode(a, &mut c.clone());
     let (tx, rx) = channel();
 
-    let mut total_power: usize = 0;
+    let mut total_tags: usize = 0;
     for index in 0..bits {
         if b.bit(index) {
-            tmp._power = index;
+            tmp._tag = index;
             tx.clone().send(tmp.clone()).unwrap();
-            total_power += index;
+            total_tags += index;
         }
         let mut copy0 = tmp.clone();
         tmp = tmp.mul(&mut copy0);
@@ -290,7 +290,7 @@ pub fn npmod2(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
 
     loop {
         let mut v0 = rx.recv().unwrap();
-        if v0._power == total_power {
+        if v0._tag == total_tags {
             /* the aggregation is done; */
             return v0;
         }
@@ -300,7 +300,7 @@ pub fn npmod2(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
         thread::spawn(move || {
             let mut r0 = v0.mul(&mut v1);
             r0 = mode(&mut r0, &mut c_copy);
-            r0._power = v0._power + v1._power;
+            r0._tag = v0._tag + v1._tag;
             sender.send(r0).unwrap();
         });
     }

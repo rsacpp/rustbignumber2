@@ -6,6 +6,9 @@ use std::sync::mpsc::channel;
 use std::thread;
 
 const _BITS0X20: u64 = 0xffffffff;
+const _SIZE: usize = 0x40;
+const _HALF_SIZE: u32 = 0x20;
+
 pub struct Bn64 {
     _len: usize,
     _dat: Vec<u64>,
@@ -77,7 +80,7 @@ impl Bn64 {
 
     pub fn bits(&mut self) -> usize {
         self.shrink();
-        let mut length = self._len * 0x40;
+        let mut length = self._len * _SIZE;
         let mut gauge: u64 = 0x8000000000000000;
         let v: u64 = self._dat[self._len - 1];
         while (v & gauge) == 0 && v > 0 {
@@ -88,8 +91,8 @@ impl Bn64 {
         return length;
     }
     pub fn bit(&mut self, index: usize) -> bool {
-        let external_offset = index / 0x40;
-        let internal_offset = index % 0x40;
+        let external_offset = index / _SIZE;
+        let internal_offset = index % _SIZE;
         let v: u64 = 0x1 << internal_offset;
         if (self._dat[external_offset] & v) > 0 {
             return true;
@@ -147,8 +150,8 @@ impl Bn64 {
         if bits == 0 {
             return self.clone();
         }
-        let external_offset: usize = bits / 0x40;
-        let internal_offset: usize = bits % 0x40;
+        let external_offset: usize = bits / _SIZE;
+        let internal_offset: usize = bits % _SIZE;
         let length = self._len + external_offset;
         if internal_offset == 0 {
             /* push without splitting the elements */
@@ -164,7 +167,7 @@ impl Bn64 {
                 let (left_shifted, _) = self._dat[index].overflowing_shl(internal_offset as u32);
                 bn.add_at(index + external_offset, left_shifted);
                 let (right_shifted, _) =
-                    self._dat[index].overflowing_shr(0x40 - internal_offset as u32);
+                    self._dat[index].overflowing_shr((_SIZE - internal_offset) as u32);
                 bn.add_at(index + external_offset + 1, right_shifted);
             }
             bn.shrink();
@@ -193,18 +196,18 @@ impl Bn64 {
         let mut result: Bn64 = Bn64::new(length);
         for index_a in 0..self._len {
             let right_a = self._dat[index_a] & _BITS0X20;
-            let left_a = self._dat[index_a] >> 0x20;
+            let left_a = self._dat[index_a] >> _HALF_SIZE;
             for index_b in 0..bn._len {
                 let right_b = bn._dat[index_b] & _BITS0X20;
-                let left_b = bn._dat[index_b] >> 0x20;
+                let left_b = bn._dat[index_b] >> _HALF_SIZE;
                 result.add_at(index_a + index_b, right_a * right_b);
                 result.add_at(index_a + index_b + 1, left_a * left_b);
-                let (tmp1, _) = (left_a * right_b).overflowing_shl(0x20);
+                let (tmp1, _) = (left_a * right_b).overflowing_shl(_HALF_SIZE);
                 result.add_at(index_a + index_b, tmp1);
-                result.add_at(index_a + index_b + 1, (left_a * right_b) >> 0x20);
-                let (tmp2, _) = (left_b * right_a).overflowing_shl(0x20);
+                result.add_at(index_a + index_b + 1, (left_a * right_b) >> _HALF_SIZE);
+                let (tmp2, _) = (left_b * right_a).overflowing_shl(_HALF_SIZE);
                 result.add_at(index_a + index_b, tmp2);
-                result.add_at(index_a + index_b + 1, (left_b * right_a) >> 0x20);
+                result.add_at(index_a + index_b + 1, (left_b * right_a) >> _HALF_SIZE);
             }
         }
 
@@ -307,8 +310,8 @@ pub fn npmod2(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
 }
 
 pub fn mersenne(n: usize) -> Bn64 {
-    let len = n / 0x40 + 1;
-    let pos = n % 0x40;
+    let len = n / _SIZE + 1;
+    let pos = n % _SIZE;
     let mut result = Bn64::new(len);
     result.add_at(len - 1, 0x1 << pos);
     result.sub_at(0, 1);

@@ -226,24 +226,24 @@ impl Bn64 {
 }
 /* a % m;*/
 pub fn mode(a: &mut Bn64, m: &mut Bn64) -> Bn64 {
-    let mut box_a = Box::new(a.clone());
+    let mut result = a.clone();
     let bits_of_m = m.bits() as i32;
     loop {
-        box_a.shrink();
-        if box_a.cmp(m) < 0 {
-            return *box_a;
+        result.shrink();
+        if result.cmp(m) < 0 {
+            return result;
         }
-        let mut diff: i32 = box_a.bits() as i32;
+        let mut diff: i32 = result.bits() as i32;
         diff = diff - bits_of_m;
         if diff == 0 {
-            return box_a.sub(m);
+            return result.sub(m);
         }
         let mut nx = m.left_push(diff as usize);
-        if box_a.cmp(&mut nx) >= 0 {
-            box_a = Box::new(box_a.sub(&mut nx));
+        if result.cmp(&mut nx) >= 0 {
+            result = result.sub(&mut nx);
         } else {
             let mut nx_1 = m.left_push(diff as usize - 1);
-            box_a = Box::new(box_a.sub(&mut nx_1));
+            result = result.sub(&mut nx_1);
         }
     }
 }

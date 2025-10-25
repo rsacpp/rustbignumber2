@@ -14,12 +14,13 @@ pub struct Bn64 {
     _dat: Vec<u64>,
     _tag: usize,
 }
-
+/*
 impl Drop for Bn64 {
     fn drop(&mut self) {
-        // info!("Dropping Bn64 {:p}", &self);
+        info!("Dropping Bn64 {:p}", &self);
     }
 }
+*/
 impl Bn64 {
     pub fn new(len: usize) -> Bn64 {
         Bn64 {
@@ -285,7 +286,7 @@ pub fn npmod2(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     for index in 0..bits {
         if b.bit(index) {
             tmp._tag = index;
-            tx.clone().send(tmp.clone()).unwrap();
+            tx.send(tmp.clone()).unwrap();
             total_tags += index;
         }
         let mut copy0 = tmp.clone();

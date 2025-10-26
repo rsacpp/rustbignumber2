@@ -5,15 +5,12 @@ use std::time::SystemTime;
 use log::info;
 mod bn64;
 use bn64::Bn64;
-/*
-mod bn128;
-use bn128::Bn128;
-*/
+
 // #[tokio::main]
 fn main() {
     Builder::new().filter_level(LevelFilter::Info).init();
 
-    let mersenne: usize = 2281;
+    let mersenne: usize = 3217;
     let mut p = bn64::mersenne(mersenne);
 
     p.to_hex();
@@ -26,6 +23,7 @@ fn main() {
     let end = SystemTime::now();
     info!("Time elapsed {:?}", end.duration_since(start));
     r.to_hex();
+
     /*
     let start = SystemTime::now();
     let r0 = bn64::npmod2(&mut bn0, &mut p_1, &mut p);
@@ -45,4 +43,42 @@ fn main() {
        r.to_hex();
 
     */
+    let mut x = vec![
+        1, 3, 4, 5, 7, 9, 8, 7, 3, 2, 1, 10, 100, 0, -3, 8, 7, 7, 7, 7, 7, 7, 7,
+    ];
+    quick_sort(&mut x);
+    info!("{:?}", x);
+}
+
+fn quick_sort<T: Ord + Clone>(v: &mut [T]) {
+    if v.len() <= 1 {
+        return;
+    }
+    if v.len() == 2 {
+        if v[0] <= v[1] {
+            return;
+        } else {
+            v.swap(0, 1);
+            return;
+        }
+    }
+    let pivot = v[v.len() - 1].clone();
+    let mut from: usize = 0;
+    let mut to: usize = v.len() - 2;
+    while from < to {
+        while v[from] <= pivot && from <= to {
+            from += 1;
+        }
+        while v[to] > pivot && to > 0 {
+            to -= 1;
+        }
+        if from < to {
+            v.swap(from, to);
+        }
+    }
+    v.swap(from, v.len() - 1);
+
+    let (left, right) = v.split_at_mut(from);
+    quick_sort(left);
+    quick_sort(&mut right[1..]);
 }

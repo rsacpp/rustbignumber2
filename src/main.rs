@@ -19,7 +19,7 @@ fn main() {
     let mut bn0: Bn64 = Bn64::from(String::from("ace"));
 
     let start = SystemTime::now();
-    let r = bn64::npmod2(&mut bn0, &mut p_1, &mut p);
+    let r = bn64::npmod3(&mut bn0, &mut p_1, &mut p);
     let end = SystemTime::now();
     info!("Time elapsed {:?}", end.duration_since(start));
     r.to_hex();
@@ -81,4 +81,24 @@ fn quick_sort<T: Ord + Clone>(v: &mut [T]) {
     let (left, right) = v.split_at_mut(from);
     quick_sort(left);
     quick_sort(&mut right[1..]);
+}
+
+fn notes(n: &mut [u32], v: u32) -> u32 {
+    if v <= 0{
+        return 0;
+    }
+    //if there is only 1 element
+    if n.len() == 1 {
+        if v % n[0] == 0 {
+            return 1;
+        }else{
+            return 0;
+        }
+    }
+    n.sort_by(|a, b| b.cmp(a));
+    let mut n_copy: Vec<u32> = Vec::new();
+    n_copy.copy_from_slice(n);
+    let (left, right) = n.split_at_mut(0);
+    let max = left[0].clone();
+    return notes(&mut n_copy, v - max) + notes(right, v);
 }

@@ -1,9 +1,10 @@
 /*
  */
 use log::info;
-/*use std::boxed::Box;*/
+use std::sync::Arc;
 use std::sync::mpsc::channel;
 use std::thread;
+use tokio::sync::Semaphore;
 
 const _BITS0X20: u64 = 0xffffffff;
 const _SIZE: usize = 0x40;
@@ -298,6 +299,48 @@ pub fn npmod2(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
         let mut v0 = rx.recv().unwrap();
         if v0._tag == total_tags {
             /* the aggregation is done; */
+            return v0;
+        }
+        let mut v1 = rx.recv().unwrap();
+        let mut c_copy = c.clone();
+        let sender = tx.clone();
+        thread::spawn(move || {
+            let mut r0 = v0.mul(&mut v1);
+            r0 = mode(&mut r0, &mut c_copy);
+            r0._tag = v0._tag + v1._tag;
+            sender.send(r0).unwrap();
+        });
+    }
+}
+
+pub fn npmod3(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
+    let bits = b.bits();
+    let mut tmp = mode(a, &mut c.clone());
+    let (tx, rx) = channel();
+    let arc = Arc::new(Semaphore::new(0));
+    let mut b_copy = b.clone();
+    let mut c_copy = c.clone();
+    let tx_copy = tx.clone();
+    let arc_copy = arc.clone();
+    thread::spawn(move || {
+        let mut total_tags: usize = 0;
+        for index in 0..bits {
+            if b_copy.bit(index) {
+                tmp._tag = index;
+                tx_copy.send(tmp.clone()).unwrap();
+                total_tags += index;
+            }
+            let mut copy0 = tmp.clone();
+            tmp = tmp.mul(&mut copy0);
+            tmp = mode(&mut tmp, &mut c_copy);
+        }
+        arc_copy.add_permits(total_tags);
+    });
+
+    loop {
+        let mut v0 = rx.recv().unwrap();
+        let available_permits = arc.available_permits();
+        if available_permits > 0 && v0._tag == available_permits {
             return v0;
         }
         let mut v1 = rx.recv().unwrap();

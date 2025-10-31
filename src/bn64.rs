@@ -276,7 +276,7 @@ pub fn npmod(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     }
     return *result;
 }
-*/
+
 
 pub fn npmod2(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     let bits = b.bits();
@@ -312,7 +312,7 @@ pub fn npmod2(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
         });
     }
 }
-
+*/
 pub fn npmod3(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     let bits = b.bits();
     let mut tmp = mode(a, &mut c.clone());
@@ -326,9 +326,9 @@ pub fn npmod3(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
         let mut total_tags: usize = 0;
         for index in 0..bits {
             if b_copy.bit(index) {
-                tmp._tag = index;
+                tmp._tag = index + 1;
                 tx_copy.send(tmp.clone()).unwrap();
-                total_tags += index;
+                total_tags += index + 1;
             }
             let mut copy0 = tmp.clone();
             tmp = tmp.mul(&mut copy0);

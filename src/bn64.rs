@@ -315,13 +315,13 @@ pub fn npmod2(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
 */
 pub fn npmod3(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     let bits = b.bits();
-    let mut tmp = mode(a, &mut c.clone());
     let (tx, rx) = channel();
     let arc = Arc::new(Semaphore::new(0));
     let mut b_copy = b.clone();
     let mut c_copy = c.clone();
     let tx_copy = tx.clone();
     let arc_copy = arc.clone();
+    let mut tmp = mode(a, &mut c.clone());
     thread::spawn(move || {
         let mut total_tags: usize = 0;
         for index in 0..bits {
@@ -331,8 +331,10 @@ pub fn npmod3(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
                 total_tags += index + 1;
             }
             let mut copy0 = tmp.clone();
-            tmp = tmp.mul(&mut copy0);
-            tmp = mode(&mut tmp, &mut c_copy);
+            if index != bits - 1 {
+                tmp = tmp.mul(&mut copy0);
+                tmp = mode(&mut tmp, &mut c_copy);
+            }
         }
         arc_copy.add_permits(total_tags);
     });

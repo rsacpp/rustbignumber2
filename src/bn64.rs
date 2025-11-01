@@ -329,8 +329,8 @@ pub fn npmod3(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
                 tx_copy.send(tmp.clone()).unwrap();
                 total_tags += index + 1;
             }
-            let mut copy0 = tmp.clone();
             if index != bits - 1 {
+                let mut copy0 = tmp.clone();
                 tmp = tmp.mul(&mut copy0);
                 tmp = mode(&mut tmp, &mut c_copy);
             }

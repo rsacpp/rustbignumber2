@@ -6,25 +6,25 @@ use log::info;
 mod bn64;
 use bn64::Bn64;
 
-// #[tokio::main]
 fn main() {
     Builder::new().filter_level(LevelFilter::Info).init();
 
+    /*
     let mersenne: usize = 3217;
     let mut p = bn64::mersenne(mersenne);
 
     p.to_hex();
     let mut p_1 = p.clone();
     // p_1.sub_at(0, 1);
+    // p_1.add_at(0, 2);
     let mut bn0: Bn64 = Bn64::from(String::from("ace"));
 
     let start = SystemTime::now();
-    let r = bn64::npmod3(&mut bn0, &mut p_1, &mut p);
+    let r = bn64::npmod (&mut bn0, &mut p_1, &mut p);
     let end = SystemTime::now();
     info!("Time elapsed {:?}", end.duration_since(start));
     r.to_hex();
 
-    /*
     let start = SystemTime::now();
     let r0 = bn64::npmod2(&mut bn0, &mut p_1, &mut p);
     let end = SystemTime::now();
@@ -42,11 +42,24 @@ fn main() {
        info!("Time elapsed {:?}", end.duration_since(start));
        r.to_hex();
 
-    */
+
     let mut x = vec![
         1, 3, 4, 5, 7, 9, 8, 7, 3, 2, 1, 10, 100, 0, -3, 8, 7, 7, 7, 7, 7, 7, 7,
     ];
     quick_sort(&mut x);
+    info!("{:?}", x);
+
+
+    let mut a = vec![1, 2, 3];
+    let mut b: Vec<i32> = vec![0; 3];
+    b.copy_from_slice(&a);
+    let (left, right) = b.split_at_mut(1);
+    info!("{:?}", left);
+
+     */
+    let mut n: Vec<i32> = vec![1, 5, 10, 50, 100];
+    let v = 200;
+    let x = notes(&mut n, v);
     info!("{:?}", x);
 }
 
@@ -83,22 +96,26 @@ fn quick_sort<T: Ord + Clone>(v: &mut [T]) {
     quick_sort(&mut right[1..]);
 }
 
-fn notes(n: &mut [u32], v: u32) -> u32 {
-    if v <= 0{
+fn notes(n: &mut [i32], v: i32) -> u32 {
+    // info!("n={:?}, v={:?}", n, v);
+    if v == 0 {
+        return 1;
+    }
+    if v < 0 {
         return 0;
     }
     //if there is only 1 element
     if n.len() == 1 {
         if v % n[0] == 0 {
             return 1;
-        }else{
+        } else {
             return 0;
         }
     }
     n.sort_by(|a, b| b.cmp(a));
-    let mut n_copy: Vec<u32> = Vec::new();
+    let mut n_copy: Vec<i32> = vec![0; n.len()];
     n_copy.copy_from_slice(n);
-    let (left, right) = n.split_at_mut(0);
-    let max = left[0].clone();
-    return notes(&mut n_copy, v - max) + notes(right, v);
+    let (left, right) = n_copy.split_at_mut(1);
+    let max = left[0];
+    return notes(n, v - max) + notes(right, v);
 }

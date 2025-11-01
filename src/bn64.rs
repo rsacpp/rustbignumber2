@@ -251,7 +251,7 @@ pub fn mode(a: &mut Bn64, m: &mut Bn64) -> Bn64 {
 }
 
 /* a^b % c*/
-/*
+
 pub fn npmod(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     let bits = b.bits();
     let mut array: Vec<Bn64> = Vec::with_capacity(bits);
@@ -276,7 +276,6 @@ pub fn npmod(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     }
     return *result;
 }
-
 
 pub fn npmod2(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     let bits = b.bits();
@@ -312,7 +311,7 @@ pub fn npmod2(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
         });
     }
 }
-*/
+
 pub fn npmod3(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     let bits = b.bits();
     let (tx, rx) = channel();

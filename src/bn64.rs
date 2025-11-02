@@ -315,19 +315,25 @@ pub fn npmod2(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
 pub fn npmod3(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     let bits = b.bits();
     let (tx, rx) = channel();
-    let arc = Arc::new(Semaphore::new(0));
+    /*let arc = Arc::new(Semaphore::new(0));*/
     let mut b_copy = b.clone();
     let mut c_copy = c.clone();
     let tx_copy = tx.clone();
-    let arc_copy = arc.clone();
+    /*let arc_copy = arc.clone();*/
     let mut tmp = mode(a, &mut c.clone());
+    let mut total_tags: usize = 0;
+    for index in 0..bits {
+        if b.bit(index) {
+            total_tags += index + 1;
+        }
+    }
     thread::spawn(move || {
-        let mut total_tags: usize = 0;
+        /*let mut total_tags: usize = 0;*/
         for index in 0..bits {
             if b_copy.bit(index) {
                 tmp._tag = index + 1;
                 tx_copy.send(tmp.clone()).unwrap();
-                total_tags += index + 1;
+                /*total_tags += index + 1;*/
             }
             if index != bits - 1 {
                 let mut copy0 = tmp.clone();
@@ -335,13 +341,13 @@ pub fn npmod3(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
                 tmp = mode(&mut tmp, &mut c_copy);
             }
         }
-        arc_copy.add_permits(total_tags);
+        /*arc_copy.add_permits(total_tags);*/
     });
 
     loop {
         let mut v0 = rx.recv().unwrap();
-        let available_permits = arc.available_permits();
-        if available_permits > 0 && v0._tag == available_permits {
+        /*let available_permits = arc.available_permits();*/
+        if v0._tag == total_tags {
             return v0;
         }
         let mut v1 = rx.recv().unwrap();

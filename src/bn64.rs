@@ -324,12 +324,10 @@ pub fn npmod3(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     }
     thread::scope(|s| {
         s.spawn(|| {
-            /*let mut total_tags: usize = 0;*/
             for index in 0..bits {
                 if b_copy.bit(index) {
                     tmp._tag = index + 1;
                     tx_copy.send(tmp.clone()).unwrap();
-                    /*total_tags += index + 1;*/
                 }
                 if index != bits - 1 {
                     let mut copy0 = tmp.clone();
@@ -339,7 +337,6 @@ pub fn npmod3(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
             }
         });
     });
-
     loop {
         let mut v0 = rx.recv().unwrap();
         if v0._tag == total_tags {

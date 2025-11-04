@@ -1,6 +1,6 @@
 /*
  */
-use log::{info};
+use log::info;
 use std::sync::mpsc::channel;
 use std::thread;
 
@@ -313,11 +313,8 @@ pub fn npmod2(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
 pub fn npmod3(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
     let bits = b.bits();
     let (tx, rx) = channel();
-    /*let arc = Arc::new(Semaphore::new(0));*/
     let mut b_copy = b.clone();
-    let mut c_copy = c.clone();
     let tx_copy = tx.clone();
-    /*let arc_copy = arc.clone();*/
     let mut tmp = mode(a, &mut c.clone());
     let mut total_tags: usize = 0;
     for index in 0..bits {
@@ -337,26 +334,23 @@ pub fn npmod3(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
                 if index != bits - 1 {
                     let mut copy0 = tmp.clone();
                     tmp = tmp.mul(&mut copy0);
-                    tmp = mode(&mut tmp, &mut c_copy);
+                    tmp = mode(&mut tmp, c);
                 }
             }
         });
-        /*arc_copy.add_permits(total_tags);*/
     });
 
     loop {
         let mut v0 = rx.recv().unwrap();
-        /*let available_permits = arc.available_permits();*/
         if v0._tag == total_tags {
             return v0;
         }
         let mut v1 = rx.recv().unwrap();
-        let mut c_copy = c.clone();
         let sender = tx.clone();
         thread::scope(|s| {
             s.spawn(|| {
                 let mut r0 = v0.mul(&mut v1);
-                r0 = mode(&mut r0, &mut c_copy);
+                r0 = mode(&mut r0, c);
                 r0._tag = v0._tag + v1._tag;
                 sender.send(r0).unwrap();
             });

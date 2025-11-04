@@ -1,10 +1,8 @@
 /*
  */
-use log::info;
-/*use std::sync::Arc;*/
+use log::{info};
 use std::sync::mpsc::channel;
 use std::thread;
-/*use tokio::sync::Semaphore;*/
 
 const _BITS0X20: u64 = 0xffffffff;
 const _SIZE: usize = 0x40;
@@ -327,20 +325,22 @@ pub fn npmod3(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
             total_tags += index + 1;
         }
     }
-    thread::spawn(move || {
-        /*let mut total_tags: usize = 0;*/
-        for index in 0..bits {
-            if b_copy.bit(index) {
-                tmp._tag = index + 1;
-                tx_copy.send(tmp.clone()).unwrap();
-                /*total_tags += index + 1;*/
+    thread::scope(|s| {
+        s.spawn(|| {
+            /*let mut total_tags: usize = 0;*/
+            for index in 0..bits {
+                if b_copy.bit(index) {
+                    tmp._tag = index + 1;
+                    tx_copy.send(tmp.clone()).unwrap();
+                    /*total_tags += index + 1;*/
+                }
+                if index != bits - 1 {
+                    let mut copy0 = tmp.clone();
+                    tmp = tmp.mul(&mut copy0);
+                    tmp = mode(&mut tmp, &mut c_copy);
+                }
             }
-            if index != bits - 1 {
-                let mut copy0 = tmp.clone();
-                tmp = tmp.mul(&mut copy0);
-                tmp = mode(&mut tmp, &mut c_copy);
-            }
-        }
+        });
         /*arc_copy.add_permits(total_tags);*/
     });
 
@@ -353,11 +353,13 @@ pub fn npmod3(a: &mut Bn64, b: &mut Bn64, c: &mut Bn64) -> Bn64 {
         let mut v1 = rx.recv().unwrap();
         let mut c_copy = c.clone();
         let sender = tx.clone();
-        thread::spawn(move || {
-            let mut r0 = v0.mul(&mut v1);
-            r0 = mode(&mut r0, &mut c_copy);
-            r0._tag = v0._tag + v1._tag;
-            sender.send(r0).unwrap();
+        thread::scope(|s| {
+            s.spawn(|| {
+                let mut r0 = v0.mul(&mut v1);
+                r0 = mode(&mut r0, &mut c_copy);
+                r0._tag = v0._tag + v1._tag;
+                sender.send(r0).unwrap();
+            });
         });
     }
 }

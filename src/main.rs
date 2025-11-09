@@ -9,60 +9,63 @@ use bn64::Bn64;
 fn main() {
     Builder::new().filter_level(LevelFilter::Info).init();
 
-    /*
     let mersenne: usize = 3217;
     let mut p = bn64::mersenne(mersenne);
-
     p.to_hex();
     let mut p_1 = p.clone();
-    // p_1.sub_at(0, 1);
+    p_1.sub_at(0, 1);
     // p_1.add_at(0, 2);
     let mut bn0: Bn64 = Bn64::from(String::from("ace"));
 
     let start = SystemTime::now();
-    let r = bn64::npmod (&mut bn0, &mut p_1, &mut p);
+    let r = bn64::npmod3(&mut bn0, &mut p_1, &mut p);
     let end = SystemTime::now();
-    info!("Time elapsed {:?}", end.duration_since(start));
+    info!(
+        "Time elapsed {:?} milliseconds",
+        end.duration_since(start).unwrap().as_millis()
+    );
     r.to_hex();
-
-    let start = SystemTime::now();
-    let r0 = bn64::npmod2(&mut bn0, &mut p_1, &mut p);
-    let end = SystemTime::now();
-    info!("Time elapsed {:?}", end.duration_since(start));
-    r0.to_hex();
-
-       let mut p_2 = bn128::mersenne(mersenne);
-       p_2.to_hex();
-       let mut p_3 = p_2.clone();
-       p_3.sub_at(0, 1);
-       let mut b128: Bn128 = Bn128::from(String::from("abcdef0123456789"));
+    /*
        let start = SystemTime::now();
-       let r = bn128::npmod2(&mut b128, &mut p_3, &mut p_2);
+       let r0 = bn64::npmod2(&mut bn0, &mut p_1, &mut p);
        let end = SystemTime::now();
        info!("Time elapsed {:?}", end.duration_since(start));
-       r.to_hex();
+       r0.to_hex();
+
+          let mut p_2 = bn128::mersenne(mersenne);
+          p_2.to_hex();
+          let mut p_3 = p_2.clone();
+          p_3.sub_at(0, 1);
+          let mut b128: Bn128 = Bn128::from(String::from("abcdef0123456789"));
+          let start = SystemTime::now();
+          let r = bn128::npmod2(&mut b128, &mut p_3, &mut p_2);
+          let end = SystemTime::now();
+          info!("Time elapsed {:?}", end.duration_since(start));
+          r.to_hex();
 
 
-    let mut x = vec![
-        1, 3, 4, 5, 7, 9, 8, 7, 3, 2, 1, 10, 100, 0, -3, 8, 7, 7, 7, 7, 7, 7, 7,
-    ];
-    quick_sort(&mut x);
-    info!("{:?}", x);
+       let mut x = vec![
+           1, 3, 4, 5, 7, 9, 8, 7, 3, 2, 1, 10, 100, 0, -3, 8, 7, 7, 7, 7, 7, 7, 7,
+       ];
+       quick_sort(&mut x);
+       info!("{:?}", x);
 
 
-    let mut a = vec![1, 2, 3];
-    let mut b: Vec<i32> = vec![0; 3];
-    b.copy_from_slice(&a);
-    let (left, right) = b.split_at_mut(1);
-    info!("{:?}", left);
+       let mut a = vec![1, 2, 3];
+       let mut b: Vec<i32> = vec![0; 3];
+       b.copy_from_slice(&a);
+       let (left, right) = b.split_at_mut(1);
+       info!("{:?}", left);
 
-     */
+
     let mut n: Vec<i32> = vec![1, 5, 10, 50, 100];
     let v = 200;
     let x = notes(&mut n, v);
     info!("{:?}", x);
-}
 
+     */
+}
+/*
 fn quick_sort<T: Ord + Clone>(v: &mut [T]) {
     if v.len() <= 1 {
         return;
@@ -119,3 +122,4 @@ fn notes(n: &mut [i32], v: i32) -> u32 {
     let max = left[0];
     return notes(n, v - max) + notes(right, v);
 }
+*/

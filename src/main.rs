@@ -24,33 +24,32 @@ fn main() {
         "Time elapsed {:?} milliseconds",
         end.duration_since(start).unwrap().as_millis()
     );
-    r.to_hex();
     /*
-       let start = SystemTime::now();
-       let r0 = bn64::npmod2(&mut bn0, &mut p_1, &mut p);
-       let end = SystemTime::now();
-       info!("Time elapsed {:?}", end.duration_since(start));
-       r0.to_hex();
+           let start = SystemTime::now();
+           let r0 = bn64::npmod2(&mut bn0, &mut p_1, &mut p);
+           let end = SystemTime::now();
+           info!("Time elapsed {:?}", end.duration_since(start));
+           r0.to_hex();
 
-          let mut p_2 = bn128::mersenne(mersenne);
-          p_2.to_hex();
-          let mut p_3 = p_2.clone();
-          p_3.sub_at(0, 1);
-          let mut b128: Bn128 = Bn128::from(String::from("abcdef0123456789"));
-          let start = SystemTime::now();
-          let r = bn128::npmod2(&mut b128, &mut p_3, &mut p_2);
-          let end = SystemTime::now();
-          info!("Time elapsed {:?}", end.duration_since(start));
-          r.to_hex();
+              let mut p_2 = bn128::mersenne(mersenne);
+              p_2.to_hex();
+              let mut p_3 = p_2.clone();
+              p_3.sub_at(0, 1);
+              let mut b128: Bn128 = Bn128::from(String::from("abcdef0123456789"));
+              let start = SystemTime::now();
+              let r = bn128::npmod2(&mut b128, &mut p_3, &mut p_2);
+              let end = SystemTime::now();
+              info!("Time elapsed {:?}", end.duration_since(start));
+              r.to_hex();
+    */
+    let mut x = vec![
+        1, 3, 4, 5, 7, 9, 8, 7, 3, 2, 1, 10, 100, 0, -3, 8, 7, 7, 7, 7, 7, 7, 7,
+    ];
+    let length = x.len();
+    quick_sort1(&mut x, 0, length);
+    info!("{:?}", x);
 
-
-       let mut x = vec![
-           1, 3, 4, 5, 7, 9, 8, 7, 3, 2, 1, 10, 100, 0, -3, 8, 7, 7, 7, 7, 7, 7, 7,
-       ];
-       quick_sort(&mut x);
-       info!("{:?}", x);
-
-
+    /*
        let mut a = vec![1, 2, 3];
        let mut b: Vec<i32> = vec![0; 3];
        b.copy_from_slice(&a);
@@ -65,7 +64,40 @@ fn main() {
 
      */
 }
-/*
+
+// index >= range_from, index < range_to
+fn quick_sort1<T: Ord + Clone>(v: &mut [T], range_from: usize, range_to: usize) {
+    if range_from + 1 >= range_to {
+        return;
+    }
+    if range_from + 2 == range_to {
+        if v[range_from] <= v[range_to - 1] {
+            return;
+        } else {
+            v.swap(range_from, range_to - 1);
+            return;
+        }
+    }
+
+    let pivot = v[range_to - 1].clone();
+    let mut from: usize = range_from;
+    let mut to: usize = range_to - 2;
+    while from < to {
+        while v[from] <= pivot && from <= to {
+            from += 1;
+        }
+        while v[to] > pivot && to > 0 {
+            to -= 1;
+        }
+        if from < to {
+            v.swap(from, to);
+        }
+    }
+    v.swap(from, range_to - 1);
+    quick_sort1(v, range_from, from);
+    quick_sort1(v, from + 1, range_to);
+}
+
 fn quick_sort<T: Ord + Clone>(v: &mut [T]) {
     if v.len() <= 1 {
         return;
@@ -99,6 +131,7 @@ fn quick_sort<T: Ord + Clone>(v: &mut [T]) {
     quick_sort(&mut right[1..]);
 }
 
+/*
 fn notes(n: &mut [i32], v: i32) -> u32 {
     // info!("n={:?}, v={:?}", n, v);
     if v == 0 {

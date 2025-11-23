@@ -8,7 +8,7 @@ use bn64::Bn64;
 
 fn main() {
     Builder::new().filter_level(LevelFilter::Info).init();
-
+    /*
     let mersenne: usize = 3217;
     let mut p = bn64::mersenne(mersenne);
     p.to_hex();
@@ -24,6 +24,7 @@ fn main() {
         "Time elapsed {:?} milliseconds",
         end.duration_since(start).unwrap().as_millis()
     );
+    */
     /*
            let start = SystemTime::now();
            let r0 = bn64::npmod2(&mut bn0, &mut p_1, &mut p);
@@ -46,7 +47,7 @@ fn main() {
         1, 3, 4, 5, 7, 9, 8, 7, 3, 2, 1, 10, 100, 0, -3, 8, 7, 7, 7, 7, 7, 7, 7,
     ];
     let length = x.len();
-    quick_sort1(&mut x, 0, length);
+    quick_sort2(&mut x, 0, length);
     info!("{:?}", x);
 
     /*
@@ -96,6 +97,39 @@ fn quick_sort1<T: Ord + Clone>(v: &mut [T], range_from: usize, range_to: usize) 
     v.swap(from, range_to - 1);
     quick_sort1(v, range_from, from);
     quick_sort1(v, from + 1, range_to);
+}
+
+fn quick_sort2<T: Ord + Clone>(v: &mut [T], range_from: usize, range_to: usize) -> &mut [T]{
+    if range_from + 1 >= range_to {
+        return v;
+    }
+    if range_from + 2 == range_to {
+        if v[range_from] <= v[range_to - 1] {
+            return v;
+        } else {
+            v.swap(range_from, range_to - 1);
+            return v;
+        }
+    }
+
+    let pivot = v[range_to - 1].clone();
+    let mut from: usize = range_from;
+    let mut to: usize = range_to - 2;
+    while from < to {
+        while v[from] <= pivot && from <= to {
+            from += 1;
+        }
+        while v[to] > pivot && to > 0 {
+            to -= 1;
+        }
+        if from < to {
+            v.swap(from, to);
+        }
+    }
+    v.swap(from, range_to - 1);
+    quick_sort2(v, range_from, from);
+    quick_sort2(v, from + 1, range_to);
+    return v;
 }
 
 fn quick_sort<T: Ord + Clone>(v: &mut [T]) {

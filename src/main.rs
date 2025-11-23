@@ -129,7 +129,7 @@ fn quick_sort2<T: Ord + Clone>(v: &mut [T], range_from: usize, range_to: usize) 
     v.swap(from, range_to - 1);
     quick_sort2(v, range_from, from);
     quick_sort2(v, from + 1, range_to);
-    return v;
+    return v; /*it could be 'v' here;*/
 }
 
 fn quick_sort<T: Ord + Clone>(v: &mut [T]) {

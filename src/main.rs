@@ -101,7 +101,7 @@ fn quick_sort1<T: Ord + Clone>(v: &mut [T], range_from: usize, range_to: usize) 
 
 fn quick_sort2<T: Ord + Clone>(v: &mut [T], range_from: usize, range_to: usize) -> &mut [T]{
     if range_from + 1 >= range_to {
-        return v;
+        return v; //why can't be 'v'
     }
     if range_from + 2 == range_to {
         if v[range_from] <= v[range_to - 1] {

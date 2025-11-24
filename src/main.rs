@@ -47,7 +47,7 @@ fn main() {
         1, 3, 4, 5, 7, 9, 8, 7, 3, 2, 1, 10, 100, 0, -3, 8, 7, 7, 7, 7, 7, 7, 7,
     ];
     let length = x.len();
-    quick_sort2(&mut x, 0, length);
+    let x = quick_sort2(&mut x, 0, length);
     info!("{:?}", x);
 
     /*
@@ -99,9 +99,10 @@ fn quick_sort1<T: Ord + Clone>(v: &mut [T], range_from: usize, range_to: usize) 
     quick_sort1(v, from + 1, range_to);
 }
 
+/* index >= range_from && index < range_to */
 fn quick_sort2<T: Ord + Clone>(v: &mut [T], range_from: usize, range_to: usize) -> &mut [T]{
     if range_from + 1 >= range_to {
-        return v; //why can't be 'v'
+        return v; /* why can't be 'v' */
     }
     if range_from + 2 == range_to {
         if v[range_from] <= v[range_to - 1] {
@@ -116,10 +117,10 @@ fn quick_sort2<T: Ord + Clone>(v: &mut [T], range_from: usize, range_to: usize) 
     let mut from: usize = range_from;
     let mut to: usize = range_to - 2;
     while from < to {
-        while v[from] <= pivot && from <= to {
+        while v[from] <= pivot && from < to {
             from += 1;
         }
-        while v[to] > pivot && to > 0 {
+        while v[to] > pivot && from < to  {
             to -= 1;
         }
         if from < to {

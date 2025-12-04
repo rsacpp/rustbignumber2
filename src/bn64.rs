@@ -5,6 +5,7 @@ use std::sync::mpsc::channel;
 use std::thread;
 
 const _BITS0X20: u64 = 0xffffffff;
+const _BITS0X40: u128 = 0xffffffffffffffff;
 const _SIZE: usize = 0x40;
 const _HALF_SIZE: u32 = 0x20;
 
@@ -195,9 +196,12 @@ impl Bn64 {
         let length = self._len + bn._len;
         let mut result: Bn64 = Bn64::new(length);
         for index_a in 0..self._len {
+            /*
             let right_a = self._dat[index_a] & _BITS0X20;
             let left_a = self._dat[index_a] >> _HALF_SIZE;
+            */
             for index_b in 0..bn._len {
+                /*
                 let right_b = bn._dat[index_b] & _BITS0X20;
                 let left_b = bn._dat[index_b] >> _HALF_SIZE;
                 result.add_at(index_a + index_b, right_a * right_b);
@@ -208,6 +212,13 @@ impl Bn64 {
                 let (tmp2, _) = (left_b * right_a).overflowing_shl(_HALF_SIZE);
                 result.add_at(index_a + index_b, tmp2);
                 result.add_at(index_a + index_b + 1, (left_b * right_a) >> _HALF_SIZE);
+                */
+                let mut res: u128 = self._dat[index_a] as u128;
+                res = res * bn._dat[index_b] as u128;
+                let low = (res & _BITS0X40) as u64;
+                let high = (res >> 64) as u64;
+                result.add_at(index_a + index_b + 1, high);
+                result.add_at(index_a + index_b , low);
             }
         }
 
